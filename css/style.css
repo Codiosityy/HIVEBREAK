@@ -1,0 +1,201 @@
+:root {
+  --gold: #ffc93c;
+  --amber: #ff9f1c;
+  --honey: #e8a020;
+  --dark: #14100a;
+  --panel: #1e1810;
+  --text: #f5ecd7;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: radial-gradient(1200px 700px at 50% -10%, #2a2113 0%, var(--dark) 60%) fixed, var(--dark);
+  color: var(--text);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#wrap {
+  width: min(1000px, 100vw);
+  padding: 14px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#brand {
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+#brand span { color: var(--gold); }
+
+#hud {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+#hud .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 64px;
+}
+#hud label {
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: 0.6;
+}
+#hud b {
+  font-size: 18px;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+#lives { letter-spacing: 2px; }
+
+.iconBtn {
+  background: var(--panel);
+  border: 1px solid #3a2f1c;
+  color: var(--text);
+  font-size: 18px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.iconBtn:hover { border-color: var(--gold); }
+
+#stage {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #3a2f1c;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55), inset 0 0 80px rgba(0,0,0,0.35);
+  background: #0d0a06;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  cursor: none;
+}
+
+#hint {
+  text-align: center;
+  font-size: 12px;
+  opacity: 0.55;
+  letter-spacing: 1px;
+}
+
+/* ---------- overlays ---------- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 7, 3, 0.72);
+  backdrop-filter: blur(3px);
+  z-index: 5;
+}
+.overlay.hidden { display: none; }
+
+.panel {
+  background: linear-gradient(180deg, #241c10 0%, #171208 100%);
+  border: 1px solid #4a3a1e;
+  border-radius: 16px;
+  padding: 34px 46px;
+  text-align: center;
+  max-width: 90%;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+}
+
+.panel h1 {
+  font-size: 52px;
+  letter-spacing: 6px;
+  color: var(--text);
+  text-shadow: 0 4px 0 rgba(0,0,0,0.45);
+}
+.panel h1 span { color: var(--gold); }
+.panel h2 {
+  font-size: 30px;
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+  color: var(--gold);
+}
+
+.tag {
+  margin-top: 8px;
+  font-size: 15px;
+  opacity: 0.85;
+  font-style: italic;
+}
+
+.rules {
+  margin: 20px auto 6px;
+  display: inline-block;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.9;
+  opacity: 0.9;
+}
+
+.final {
+  font-size: 20px;
+  margin: 10px 0 4px;
+}
+.final b { color: var(--gold); font-size: 26px; }
+
+.tiny { font-size: 12px; opacity: 0.6; margin-top: 6px; }
+.tiny b { color: var(--gold); }
+
+.btn {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #1b1508;
+  background: linear-gradient(180deg, var(--gold), var(--amber));
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #a86a10, 0 8px 20px rgba(255,159,28,0.25);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.btn:hover { filter: brightness(1.06); }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #a86a10; }
+.btn.big { font-size: 19px; padding: 15px 26px; }
+.btn.ghost {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid #5a4720;
+  box-shadow: none;
+}
+.btn.ghost:hover { border-color: var(--gold); }
+.btn.ghost:active { transform: none; }
+
+@media (max-width: 640px) {
+  .panel { padding: 24px 22px; }
+  .panel h1 { font-size: 36px; letter-spacing: 3px; }
+  #hud { gap: 10px; }
+}
