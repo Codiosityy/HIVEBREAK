@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIVEBREAK — Shatter the Honeycomb</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐝</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="wrap">
+    <header id="topbar">
+      <div id="brand">🐝 HIVE<span>BREAK</span></div>
+      <div id="hud">
+        <div class="stat"><label>SCORE</label><b id="score">0</b></div>
+        <div class="stat"><label>BEST</label><b id="high">0</b></div>
+        <div class="stat"><label>LEVEL</label><b id="level">1</b></div>
+        <div class="stat"><label>LIVES</label><b id="lives">🐝🐝🐝</b></div>
+        <button id="muteBtn" title="Toggle sound (M)">🔊</button>
+      </div>
+    </header>
+
+    <div id="stage">
+      <canvas id="game" width="960" height="640"></canvas>
+
+      <div class="overlay" id="menu">
+        <div class="panel">
+          <h1>HIVE<span>BREAK</span></h1>
+          <p class="tag">Shatter the honeycomb. Free the swarm.</p>
+          <div class="rules">
+            <div>🖱️ / ← → &nbsp;move the hive bar</div>
+            <div>SPACE / click &nbsp;launch · fire stingers</div>
+            <div>💣 chain bombs · catch falling power-ups</div>
+            <div>P pause &nbsp;·&nbsp; M mute</div>
+          </div>
+          <button class="btn big" id="btnStart">START THE BREAK</button>
+          <p class="tiny">best score: <b id="menuHigh">0</b></p>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="paused">
+        <div class="panel">
+          <h2>PAUSED</h2>
+          <button class="btn" id="btnResume">RESUME</button>
+          <button class="btn ghost" id="btnRestartP">RESTART RUN</button>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="over">
+        <div class="panel">
+          <h2>THE SWARM FELL</h2>
+          <p class="final">score <b id="finalScore">0</b></p>
+          <p class="tiny" id="newBest"></p>
+          <button class="btn" id="btnRetry">TRY AGAIN</button>
+          <button class="btn ghost" id="btnMenuOver">MENU</button>
+        </div>
+      </div>
+
+      <div class="overlay hidden" id="win">
+        <div class="panel">
+          <h2>👑 QUEEN'S CROWN SHATTERED</h2>
+          <p class="tag">You cleared all 8 chambers of the hive!</p>
+          <p class="final">score <b id="winScore">0</b></p>
+          <button class="btn" id="btnEndless">KEEP BREAKING (ENDLESS)</button>
+          <button class="btn ghost" id="btnMenuWin">MENU</button>
+        </div>
+      </div>
+    </div>
+
+    <footer id="hint">← → / mouse to move · SPACE launch &amp; fire · P pause · M mute</footer>
+  </div>
+<script src="js/game.js"></script>
+</body>
+</html>
