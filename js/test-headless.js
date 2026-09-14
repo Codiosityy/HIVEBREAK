@@ -102,6 +102,24 @@ el("btnStart").onclick();
   pump(120); // ~2s -> banner expires
   assert(G.state === "playing", "state becomes playing after banner (got " + G.state + ")");
   assert(G.balls.length === 1 && G.balls[0].stuck, "ball served stuck to paddle");
+  assert(Array.isArray(G.balls[0].trail), "ball carries a trail buffer");
+}
+
+console.log("\n[2b] horizontal-loop guard kicks in on shallow brick bounce");
+{
+  const G = HB.G;
+  // place a ball moving almost perfectly horizontal under the bottom brick row
+  G.balls = [{ x: 100, y: 252, vx: 400, vy: 0.5, r: 9, stuck: false, stickOff: 0, trail: [] }];
+  let hit = false;
+  for (let i = 0; i < 90 && !hit; i++) {
+    const rally = G.rally;
+    pump(1);
+    if (G.rally > rally) hit = true;
+  }
+  assert(hit, "ball hit a brick while moving horizontally");
+  const b = G.balls[0];
+  const sp = Math.hypot(b.vx, b.vy);
+  assert(sp > 0 && Math.abs(b.vy) >= sp * 0.11, "vertical component enforced after shallow bounce (|vy|/sp = " + (Math.abs(b.vy) / sp).toFixed(2) + ")");
 }
 
 console.log("\n[3] bot plays ~30 simulated seconds");
@@ -129,6 +147,7 @@ console.log("\n[3] bot plays ~30 simulated seconds");
   assert(stuckSeen, "bot launched a stuck ball");
   assert(G.score > 0, "score increased: " + G.score);
   assert(bricksDied > 0 || G.level > 0, "bricks destroyed by ball: " + bricksDied + (G.level > 0 ? " (level already cleared!)" : ""));
+  assert(G.rally > 0 || G.level > 0, "rally speed ramp accumulating (rally=" + G.rally + ")");
   assert(G.best >= G.score, "best >= score");
   console.log("    (score=" + G.score + ", bricks destroyed=" + bricksDied + ", lives=" + G.lives + ", state=" + G.state + ")");
 }
@@ -197,6 +216,12 @@ console.log("\n[8] powerup effects apply");
 {
   const G = HB.G;
   G.state = "playing";
+
+  // multiball cap: 12 balls already -> catching M adds nothing
+  G.balls = Array.from({ length: 12 }, () => ({ x: 480, y: 300, vx: 100, vy: -100, r: 9, stuck: false, stickOff: 0, trail: [] }));
+  HB.applyPower({ id: "multi", color: "#fff", desc: "M", label: "M" });
+  assert(G.balls.length === 12, "multiball capped at MAX_BALLS=12 (got " + G.balls.length + ")");
+  G.balls = [G.balls[0]];
   const mk = (id) => ({ x: G.paddle.x, y: G.paddle.y - 5, vy: 0, type: { id, color: "#fff", desc: id, label: "?" }, rot: 0 });
   const before = G.balls.length;
   // simulate catching multi/laser/wide/life via applyPower path (call through update is complex;

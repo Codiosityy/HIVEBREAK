@@ -234,7 +234,11 @@ const G = {
   shake: 0,
   time: 0,
   firing: false,
+  rally: 0, // brick hits since last serve; gently ramps ball speed
 };
+
+const MAX_BALLS = 12;
+function rallyMul() { return Math.min(1.3, 1 + G.rally * 0.006); }
 
 const BRICK_COLORS = {
   h:  { fill: "#f6b93b", edge: "#c47f0e", glow: "rgba(246,185,59,.35)", hp: 1, pts: 50 },
@@ -286,10 +290,11 @@ function ballSpeed() {
 
 function newBall(x, y, angle = -Math.PI / 2) {
   const s = ballSpeed();
-  return { x, y, vx: Math.cos(angle) * s, vy: Math.sin(angle) * s, r: 9, stuck: true, stickOff: 0 };
+  return { x, y, vx: Math.cos(angle) * s, vy: Math.sin(angle) * s, r: 9, stuck: true, stickOff: 0, trail: [] };
 }
 
 function serveBall() {
+  G.rally = 0;
   G.balls = [newBall(G.paddle.x, G.paddle.y - 14)];
   G.balls[0].stuck = true;
 }
@@ -392,6 +397,7 @@ function togglePause() {
     G.state = "playing";
     hide("paused");
   }
+  $("pauseBtn").textContent = G.state === "paused" ? "▶" : "⏸";
 }
 
 function toggleMute() {
@@ -417,6 +423,7 @@ $("btnEndless").onclick = () => {
 };
 $("btnMenuWin").onclick = () => { hideAll(); G.state = "menu"; $("menuHigh").textContent = G.best; show("menu"); };
 $("muteBtn").onclick = () => { SFX.ensure(); toggleMute(); };
+$("pauseBtn").onclick = () => { SFX.ensure(); togglePause(); };
 
 $("menuHigh").textContent = G.best;
 
@@ -509,15 +516,17 @@ function applyPower(type) {
       G.lives = Math.min(G.lives + 1, 6);
       break;
     case "multi": {
+      if (G.balls.length >= MAX_BALLS) break; // don't flood the hive
       const src = G.balls.find((b) => !b.stuck) || G.balls[0];
       if (src) {
         const s = Math.hypot(src.vx, src.vy) || ballSpeed();
         const base = Math.atan2(src.vy, src.vx);
         for (const da of [-0.5, 0.5]) {
+          if (G.balls.length >= MAX_BALLS) break;
           G.balls.push({
             x: src.x, y: src.y,
             vx: Math.cos(base + da) * s, vy: Math.sin(base + da) * s,
-            r: 9, stuck: false, stickOff: 0,
+            r: 9, stuck: false, stickOff: 0, trail: [],
           });
         }
       }
@@ -558,12 +567,13 @@ function update(dt) {
     if (b.stuck) {
       b.x = p.x + b.stickOff;
       b.y = p.y - p.h / 2 - b.r - 1;
+      b.trail.length = 0;
     }
   }
 
   if (G.state !== "playing") return;
 
-  const speedMul = G.effects.slow > 0 ? 0.62 : 1;
+  const speedMul = (G.effects.slow > 0 ? 0.62 : 1) * rallyMul();
 
   // auto-fire while laser active and holding space
   if (G.effects.laser > 0 && (G.firing || keys["Space"])) fireLasers(false);
@@ -622,11 +632,24 @@ function update(dt) {
             b.vx -= 2 * dot * hit.nx;
             b.vy -= 2 * dot * hit.ny;
           }
+          // keep a minimum vertical share so the ball can't loop forever horizontally
+          const sp = Math.hypot(b.vx, b.vy);
+          if (sp > 0 && Math.abs(b.vy) < sp * 0.12) {
+            const sign = b.vy === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(b.vy);
+            b.vy = sign * sp * 0.2;
+            b.vx = Math.sign(b.vx || 1) * Math.sqrt(Math.max(0, sp * sp - b.vy * b.vy));
+          }
           G.combo++;
+          G.rally++;
           damageBrick(brick, 1, false);
           break;
         }
       }
+    }
+    // trail for juice
+    if (!b.dead) {
+      b.trail.push({ x: b.x, y: b.y });
+      if (b.trail.length > 10) b.trail.shift();
     }
   }
 
@@ -652,6 +675,7 @@ function update(dt) {
       if (Math.hypot(l.x - brick.x, l.y - brick.y) < brick.r) {
         l.dead = true;
         G.combo++;
+        G.rally++;
         damageBrick(brick, 1, false);
         break;
       }
@@ -694,6 +718,7 @@ function update(dt) {
     if (!G.endless && G.level >= LEVELS.length - 1) {
       G.state = "win";
       $("winScore").textContent = G.score.toLocaleString();
+      $("winBest").textContent = G.best.toLocaleString();
       snd.level();
       show("win");
     } else {
@@ -886,6 +911,17 @@ function draw() {
 
   // balls (bees)
   for (const b of G.balls) {
+    // trail
+    for (let i = 0; i < b.trail.length; i++) {
+      const t = b.trail[i];
+      ctx.globalAlpha = ((i + 1) / b.trail.length) * 0.28;
+      ctx.fillStyle = "#ffc93c";
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, b.r * (0.25 + 0.55 * (i / b.trail.length)), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
     ctx.save();
     ctx.shadowColor = "#ffc93c";
     ctx.shadowBlur = 16;
@@ -950,6 +986,26 @@ function draw() {
 
   // active effect badges
   drawEffects();
+
+  // combo multiplier indicator
+  const mult = 1 + Math.floor(G.combo / 4);
+  if (mult > 1 && (G.state === "playing" || G.state === "banner")) {
+    const pulse = 1 + 0.06 * Math.sin(G.time * 10);
+    ctx.save();
+    ctx.translate(W - 20, 30);
+    ctx.scale(pulse, pulse);
+    ctx.font = "bold 20px sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#ffc93c";
+    ctx.shadowColor = "rgba(255,201,60,.7)";
+    ctx.shadowBlur = 12;
+    ctx.fillText("COMBO x" + mult, 0, 0);
+    ctx.shadowBlur = 0;
+    ctx.font = "11px sans-serif";
+    ctx.fillStyle = "rgba(245,236,215,.65)";
+    ctx.fillText(G.combo + " hits", 0, 16);
+    ctx.restore();
+  }
 
   // level banner
   if (G.state === "banner") {
@@ -1031,7 +1087,7 @@ function updateHud() {
 if (typeof window !== "undefined") {
   window.__HB = {
     get G() { return G; },
-    action, damageBrick, destroyBrick, startLevel, startGame, circlePoly, hexCorners,
+    action, damageBrick, destroyBrick, startLevel, startGame, applyPower, circlePoly, hexCorners,
   };
 }
 

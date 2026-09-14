@@ -68,7 +68,7 @@ body {
 }
 #lives { letter-spacing: 2px; }
 
-#muteBtn {
+.iconBtn {
   background: var(--panel);
   border: 1px solid #3a2f1c;
   color: var(--text);
@@ -78,7 +78,7 @@ body {
   border-radius: 10px;
   cursor: pointer;
 }
-#muteBtn:hover { border-color: var(--gold); }
+.iconBtn:hover { border-color: var(--gold); }
 
 #stage {
   position: relative;
